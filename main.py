@@ -1,12 +1,17 @@
+import os
+import sys
+
 import pygame
 
 from asteroid import Asteroid
 from asteroidfield import AsteroidField
+from bullet import Bullet
 from constants import *
 from player import Player
 
 
 def main():
+    os.environ["SDL_VIDEO_WINDOW_POS"] = "600,300"
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     game_time = pygame.time.Clock()
@@ -14,12 +19,14 @@ def main():
     updatable = pygame.sprite.Group()
     drawable = pygame.sprite.Group()
     asteroids = pygame.sprite.Group()
+    bullets = pygame.sprite.Group()
 
     Asteroid.containers = (asteroids, updatable, drawable)  # type: ignore
     AsteroidField.containers = updatable  # type: ignore
-    asteroid_field = AsteroidField()
-
     Player.containers = (updatable, drawable)  # type: ignore
+    Bullet.containers = (bullets, updatable, drawable)  # type: ignore
+
+    asteroid_field = AsteroidField()
 
     player = Player((SCREEN_WIDTH / 2), (SCREEN_HEIGHT / 2))
 
@@ -31,6 +38,16 @@ def main():
                 return
 
         updatable.update(dt)
+
+        for asteroid in asteroids:
+            if asteroid.collides_with(player):
+                print("Game over!")
+                sys.exit()
+
+            for bullet in bullets:
+                if bullet.collides_with(asteroid):
+                    bullet.kill()
+                    asteroid.split()
 
         screen.fill("black")
 
